@@ -1,159 +1,271 @@
-// app.js - Firebase based auth + realtime chat
+\
+// app.js - Upgraded chat app (auth, 1:1, groups, files)
+// Uses Firebase modular SDK loaded from CDN
 import { firebaseConfig } from './firebase-config.js';
-
-// Import Firebase modular SDK from CDN
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-import { getDatabase, ref, push, onChildAdded, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+import { getDatabase, ref, set, push, onChildAdded, onValue, get, child, update, serverTimestamp, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+import { getStorage, ref as sref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
+const storage = getStorage(app);
 
-// helper to show messages
-function showMessage(el, text, success=true){
-  el.textContent = text;
-  el.style.color = success ? '' : '#ffb3b3';
-  setTimeout(()=>el.textContent='',5000);
-}
+// Helpers
+function $(id){return document.getElementById(id);}
+function showMsg(el, txt, ok=true){ if(!el) return; el.textContent = txt; el.style.color = ok? '':'#ffb3b3'; setTimeout(()=>el.textContent='',(ok?4000:6000)); }
+function escapeHtml(s){ return (s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+function uidPair(a,b){ return a<b? a+'_'+b : b+'_'+a; } // deterministic chat id for 1:1
 
-/* ----------------- Register Page ----------------- */
-export function initRegisterPage(){
-  const form = document.getElementById('registerForm');
-  const msg = document.getElementById('message');
-  const toggle = document.getElementById('togglePassword');
-  const passwordInput = document.getElementById('password');
+/* ------------------ AUTH PAGE ------------------ */
+export function initAuthPage(){
+  // tabs
+  const tabLogin = $('tabLogin'), tabRegister = $('tabRegister'), tabForgot = $('tabForgot');
+  const loginPanel = $('loginPanel'), registerPanel = $('registerPanel'), forgotPanel = $('forgotPanel');
+  function showTab(t){ tabLogin.classList.remove('active'); tabRegister.classList.remove('active'); tabForgot.classList.remove('active'); loginPanel.classList.add('hidden'); registerPanel.classList.add('hidden'); forgotPanel.classList.add('hidden'); t.classList.add('active'); if(t===tabLogin) loginPanel.classList.remove('hidden'); if(t===tabRegister) registerPanel.classList.remove('hidden'); if(t===tabForgot) forgotPanel.classList.remove('hidden'); }
+  tabLogin.onclick = ()=> showTab(tabLogin);
+  tabRegister.onclick = ()=> showTab(tabRegister);
+  tabForgot.onclick = ()=> showTab(tabForgot);
 
-  toggle.addEventListener('click', ()=> {
-    const t = passwordInput;
-    t.type = t.type === 'password' ? 'text' : 'password';
-    toggle.textContent = t.type === 'password' ? '👁' : '🙈';
-  });
+  // prevent forms default if JS breaks
+  document.querySelectorAll('form').forEach(f=> f.addEventListener('submit', e=> e.preventDefault()));
 
-  form.addEventListener('submit', async (e)=>{
+  // toggles
+  $('regEye').onclick = ()=> { const t=$('regPassword'); t.type = t.type==='password'?'text':'password'; $('regEye').textContent = t.type==='password'?'👁':'🙈'; }
+  $('loginEye').onclick = ()=> { const t=$('loginPassword'); t.type = t.type==='password'?'text':'password'; $('loginEye').textContent = t.type==='password'?'👁':'🙈'; }
+
+  // register
+  $('registerForm').addEventListener('submit', async (e)=>{
     e.preventDefault();
-    const name = document.getElementById('name').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const password = passwordInput.value;
+    const name = $('regName').value.trim();
+    const email = $('regEmail').value.trim();
+    const pass = $('regPassword').value;
+    const photoFile = $('regPhoto').files[0];
+    if(!name||!email||!pass) return showMsg($('regMsg'),'Please fill all fields', false);
     try{
-      const userCred = await createUserWithEmailAndPassword(auth, email, password);
-      // set display name
-      await updateProfile(userCred.user, { displayName: name });
-      showMessage(msg, 'Registered successfully! Redirecting to chat...');
-      setTimeout(()=> location.href = 'chat.html', 1200);
+      const cred = await createUserWithEmailAndPassword(auth, email, pass);
+      // upload photo if present
+      let photoURL = '';
+      if(photoFile){
+        const p = sref(storage, `avatars/${cred.user.uid}_${photoFile.name}`);
+        await uploadBytes(p, photoFile);
+        photoURL = await getDownloadURL(p);
+      }
+      await updateProfile(cred.user, { displayName: name, photoURL: photoURL || null });
+      // write user profile to DB
+      await set(ref(db, `users/${cred.user.uid}`), { name, email, photoURL: photoURL||'', createdAt: Date.now() });
+      showMsg($('regMsg'),'Account created. Redirecting...');
+      setTimeout(()=> location.href = 'app.html', 1000);
     }catch(err){
-      showMessage(msg, err.message, false);
+      console.error(err);
+      showMsg($('regMsg'), err.message || 'Error', false);
     }
   });
-}
 
-/* ----------------- Login Page ----------------- */
-export function initLoginPage(){
-  const form = document.getElementById('loginForm');
-  const msg = document.getElementById('message');
-  const toggle = document.getElementById('togglePassword');
-  const passwordInput = document.getElementById('password');
-
-  toggle.addEventListener('click', ()=> {
-    const t = passwordInput;
-    t.type = t.type === 'password' ? 'text' : 'password';
-    toggle.textContent = t.type === 'password' ? '👁' : '🙈';
-  });
-
-  form.addEventListener('submit', async (e)=>{
+  // login
+  $('loginForm').addEventListener('submit', async (e)=>{
     e.preventDefault();
-    const email = document.getElementById('email').value.trim();
-    const password = passwordInput.value;
+    const email = $('loginEmail').value.trim();
+    const pass = $('loginPassword').value;
     try{
-      await signInWithEmailAndPassword(auth, email, password);
-      showMessage(msg, 'Login successful! Redirecting...');
-      setTimeout(()=> location.href = 'chat.html', 800);
+      await signInWithEmailAndPassword(auth, email, pass);
+      showMsg($('loginMsg'),'Logged in. Redirecting...');
+      setTimeout(()=> location.href = 'app.html', 700);
     }catch(err){
-      showMessage(msg, err.message, false);
+      console.error(err);
+      showMsg($('loginMsg'), err.message || 'Login failed', false);
     }
   });
-}
 
-/* ----------------- Forgot Page ----------------- */
-export function initForgotPage(){
-  const form = document.getElementById('forgotForm');
-  const msg = document.getElementById('message');
-  form.addEventListener('submit', async (e)=>{
+  // forgot
+  $('forgotForm').addEventListener('submit', async (e)=>{
     e.preventDefault();
-    const email = document.getElementById('email').value.trim();
+    const email = $('forgotEmail').value.trim();
     try{
       await sendPasswordResetEmail(auth, email);
-      showMessage(msg, 'Password reset email sent. Check your inbox.');
+      showMsg($('forgotMsg'), 'Password reset sent. Check your inbox.');
     }catch(err){
-      showMessage(msg, err.message, false);
+      console.error(err);
+      showMsg($('forgotMsg'), err.message||'Error', false);
     }
   });
 }
 
-/* ----------------- Chat Page ----------------- */
-export function initChatPage(){
-  const messagesEl = document.getElementById('messages');
-  const form = document.getElementById('messageForm');
-  const input = document.getElementById('messageInput');
-  const logoutBtn = document.getElementById('logoutBtn');
-  const userNameEl = document.getElementById('userName');
+/* ------------------ MAIN APP PAGE ------------------ */
+let activeChatId = null;
+let activeIsGroup = false;
+export function initAppPage(){
+  // ensure served over http(s)
+  if(location.protocol==='file:') alert('Run a local server (python -m http.server) or host files. Modules need HTTP/HTTPS.');
 
-  // require login
-  onAuthStateChanged(auth, user => {
-    if(!user){
-      location.href = 'login.html';
-      return;
-    }
-    const displayName = user.displayName || user.email.split('@')[0];
-    userNameEl.textContent = displayName;
-    // load existing messages
-    const messagesRef = ref(db, 'messages/');
-    onChildAdded(messagesRef, (snap) => {
-      const m = snap.val();
-      addMessageToList(m, user.uid);
+  // elements
+  const meAvatar = $('meAvatar'), meName = $('meName'), meEmail = $('meEmail');
+  const signOutBtn = $('signOutBtn'), chatList = $('chatList'), searchInput = $('searchInput');
+  const newChatBtn = $('newChatBtn'), newGroupBtn = $('newGroupBtn');
+  const messagesEl = $('messages'), chatNameEl = $('chatName'), chatSubEl = $('chatSub'), chatAvatar = $('chatAvatar');
+  const msgForm = $('msgForm'), msgInput = $('msgInput'), attachBtn = $('attachBtn'), fileInput = $('fileInput');
+  const newChatDialog = $('newChatDialog'), newGroupDialog = $('newGroupDialog');
+  const newChatForm = $('newChatForm'), newGroupForm = $('newGroupForm');
+
+  // auth state
+  onAuthStateChanged(auth, async user=>{
+    if(!user) return location.href = 'auth.html';
+    // show profile
+    meName.textContent = user.displayName || user.email.split('@')[0];
+    meEmail.textContent = user.email;
+    if(user.photoURL) meAvatar.style.backgroundImage = `url(${user.photoURL})`, meAvatar.textContent='';
+    // presence
+    const statusRef = ref(db, `status/${user.uid}`);
+    await set(statusRef, { state: 'online', lastChanged: Date.now() });
+    // load chat list (userChats)
+    listenChatList(user.uid);
+  });
+
+  signOutBtn.addEventListener('click', async ()=>{ await signOut(auth); location.href='auth.html'; });
+
+  // chat list
+  function listenChatList(uid){
+    chatList.innerHTML = '';
+    const listRef = ref(db, `userChats/${uid}`);
+    onChildAdded(listRef, async snap=>{
+      const chatId = snap.key;
+      const meta = snap.val();
+      renderChatItem(chatId, meta);
     });
-  });
+  }
 
-  logoutBtn.addEventListener('click', async ()=> {
-    await signOut(auth);
-    location.href = 'login.html';
-  });
+  async function renderChatItem(chatId, meta){
+    const el = document.createElement('div'); el.className='chat-item'; el.id = 'chat_'+chatId;
+    const av = document.createElement('div'); av.className='avatar'; av.textContent = (meta.name||'C')[0].toUpperCase();
+    const metaDiv = document.createElement('div'); metaDiv.className='meta';
+    const nameDiv = document.createElement('div'); nameDiv.className='name'; nameDiv.textContent = meta.name || 'Chat';
+    const lastDiv = document.createElement('div'); lastDiv.className='last'; lastDiv.textContent = meta.last || '';
+    metaDiv.appendChild(nameDiv); metaDiv.appendChild(lastDiv);
+    el.appendChild(av); el.appendChild(metaDiv);
+    el.addEventListener('click', ()=> openChat(chatId, meta));
+    chatList.prepend(el);
+  }
 
-  form.addEventListener('submit', async (e)=>{
+  // create new 1:1
+  newChatBtn.addEventListener('click', ()=> newChatDialog.showModal());
+  $('closeNewChat').addEventListener('click', ()=> newChatDialog.close());
+  newChatForm.addEventListener('submit', async (e)=>{
     e.preventDefault();
-    const text = input.value.trim();
-    if(!text) return;
-    const user = auth.currentUser;
-    if(!user) return alert('Not signed in');
-    const payload = {
-      uid: user.uid,
-      name: user.displayName || user.email.split('@')[0],
-      text,
-      ts: Date.now()
-    };
+    const friendEmail = $('friendEmail').value.trim();
+    if(!friendEmail) return;
+    // find user by email
+    const usersRef = ref(db, 'users');
     try{
-      await push(ref(db, 'messages/'), payload);
-      input.value = '';
-    }catch(err){
-      alert(err.message);
-    }
+      const snap = await get(usersRef);
+      let friend = null;
+      snap.forEach(ch=>{ const v = ch.val(); if(v.email===friendEmail) friend = { uid: ch.key, ...v }; });
+      if(!friend) return alert('No user with that email registered.');
+      const me = auth.currentUser;
+      const chatId = uidPair(me.uid, friend.uid);
+      // create chat meta and userChats entries
+      const meta = { name: friend.name || friend.email.split('@')[0], members: {[me.uid]:true, [friend.uid]:true}, isGroup:false, last:'' };
+      await set(ref(db, `chats/${chatId}/meta`), meta);
+      await set(ref(db, `userChats/${me.uid}/${chatId}`), { name: friend.name||friend.email.split('@')[0], last:'' });
+      await set(ref(db, `userChats/${friend.uid}/${chatId}`), { name: me.displayName||me.email.split('@')[0], last:'' });
+      newChatDialog.close();
+      openChat(chatId, meta);
+    }catch(err){ console.error(err); alert('Error creating chat'); }
   });
 
-  function addMessageToList(m, myUid){
-    const div = document.createElement('div');
-    div.className = 'message ' + (m.uid === myUid ? 'me' : 'other');
-    div.innerHTML = '<div class="message-text">'+escapeHtml(m.text)+'</div><div class="message-meta">' + (m.name ? escapeHtml(m.name) + ' • ' : '') + timeString(m.ts) + '</div>';
+  // create group
+  newGroupBtn.addEventListener('click', ()=> newGroupDialog.showModal());
+  $('closeNewGroup').addEventListener('click', ()=> newGroupDialog.close());
+  newGroupForm.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const name = $('groupName').value.trim(); const membersRaw = $('groupMembers').value.trim();
+    const me = auth.currentUser;
+    if(!name) return alert('Group needs a name');
+    const members = [me.email];
+    if(membersRaw) members.push(...membersRaw.split(',').map(s=>s.trim()).filter(Boolean));
+    // find uids for emails
+    const allUsersSnap = await get(ref(db,'users'));
+    const memberUids = {};
+    allUsersSnap.forEach(ch=>{ const v=ch.val(); if(members.includes(v.email)) memberUids[ch.key]=true; });
+    // ensure current user included
+    memberUids[me.uid] = true;
+    const groupId = 'group_' + Date.now();
+    const meta = { name, members: memberUids, isGroup:true, createdAt:Date.now() };
+    await set(ref(db, `chats/${groupId}/meta`), meta);
+    // add to each user's userChats
+    for(const u of Object.keys(memberUids)){
+      await set(ref(db, `userChats/${u}/${groupId}`), { name, last:'' });
+    }
+    newGroupDialog.close();
+    openChat(groupId, meta);
+  });
+
+  // open chat
+  async function openChat(chatId, meta){
+    activeChatId = chatId;
+    activeIsGroup = meta.isGroup || false;
+    // mark active UI
+    document.querySelectorAll('.chat-item').forEach(e=> e.classList.remove('active'));
+    const node = $('chat_'+chatId); if(node) node.classList.add('active');
+    // header
+    chatNameEl.textContent = meta.name || 'Chat';
+    chatSubEl.textContent = activeIsGroup ? 'Group chat' : 'Private chat';
+    chatAvatar.textContent = (meta.name||'C')[0].toUpperCase();
+    // listen messages
+    messagesEl.innerHTML = '';
+    const msgsRef = ref(db, `chats/${chatId}/messages`);
+    onChildAdded(msgsRef, snap=>{
+      const m = snap.val();
+      addMessage(m);
+    });
+  }
+
+  // add message UI
+  function addMessage(m){
+    const cur = auth.currentUser;
+    const div = document.createElement('div'); div.className = 'message ' + (m.uid===cur.uid ? 'me' : 'other');
+    let html = '<div class="text">'+ escapeHtml(m.text || '') +'</div>';
+    if(m.type === 'image' && m.fileUrl){ html += `<img src="${m.fileUrl}" alt="img" />`; }
+    if(m.type === 'file' && m.fileUrl){ html += `<div class="file"><a href="${m.fileUrl}" target="_blank">${m.fileName||'file'}</a></div>`; }
+    html += `<div class="meta">${escapeHtml(m.name||'')} • ${new Date(m.ts).toLocaleString()}</div>`;
+    div.innerHTML = html;
     messagesEl.appendChild(div);
     messagesEl.scrollTop = messagesEl.scrollHeight;
   }
 
-  function timeString(ts){
-    if(!ts) return '';
-    const d = new Date(ts);
-    return d.toLocaleString();
-  }
+  // send message (text or file)
+  msgForm.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const txt = msgInput.value.trim(); if(!txt && !fileInput.files[0]) return;
+    const cur = auth.currentUser;
+    const payload = { uid: cur.uid, name: cur.displayName||cur.email.split('@')[0], ts: Date.now(), text: txt };
+    if(fileInput.files[0]){
+      const f = fileInput.files[0];
+      const path = `uploads/${activeChatId}/${Date.now()}_${f.name}`;
+      const stRef = sref(storage, path);
+      const upl = await uploadBytes(stRef, f);
+      const url = await getDownloadURL(stRef);
+      if(f.type.startsWith('image/')){ payload.type='image'; payload.fileUrl = url; payload.fileName = f.name; } else { payload.type='file'; payload.fileUrl = url; payload.fileName = f.name; }
+      fileInput.value = '';
+    }
+    // push message
+    await push(ref(db, `chats/${activeChatId}/messages`), payload);
+    // update last on userChats for all members (quick/naive approach)
+    const metaSnap = await get(ref(db, `chats/${activeChatId}/meta`));
+    const meta = metaSnap.val() || {};
+    const members = meta.members ? Object.keys(meta.members) : [];
+    for(const u of members){ await update(ref(db, `userChats/${u}/${activeChatId}`), { last: payload.text || (payload.fileName||'attachment') }); }
+    msgInput.value = '';
+  });
 
-  function escapeHtml(str){
-    return (str || '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
-  }
+  attachBtn.addEventListener('click', ()=> fileInput.click());
+
+  // search simple (client-side)
+  searchInput.addEventListener('input', ()=>{
+    const q = searchInput.value.toLowerCase();
+    document.querySelectorAll('.chat-item').forEach(ci=>{
+      const name = ci.querySelector('.name').textContent.toLowerCase();
+      ci.style.display = name.includes(q)? 'flex' : 'none';
+    });
+  });
 }

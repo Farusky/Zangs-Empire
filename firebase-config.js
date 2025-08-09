@@ -1,6 +1,5 @@
 // firebase-config.js
-// This file contains your Firebase configuration. You've provided these values.
-// Do NOT share this file publicly if you don't want others to use your Firebase project.
+// Your Firebase configuration (zangs-empire)
 export const firebaseConfig = {
   apiKey: "AIzaSyCEE88mwO624PNc63oOFKtqzQK9w5BsAlk",
   authDomain: "zangs-empire.firebaseapp.com",

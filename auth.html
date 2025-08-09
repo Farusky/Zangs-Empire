@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Auth - Family Chat</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container auth-shell">
+    <div class="tabs">
+      <button id="tabLogin" class="tab active">Login</button>
+      <button id="tabRegister" class="tab">Register</button>
+      <button id="tabForgot" class="tab">Forgot</button>
+    </div>
+
+    <div id="loginPanel" class="panel">
+      <h3>Login</h3>
+      <form id="loginForm">
+        <label>Email</label><input id="loginEmail" type="email" required />
+        <label>Password</label>
+        <div class="password-row"><input id="loginPassword" type="password" required /><button type="button" class="eye" id="loginEye">👁</button></div>
+        <button class="btn" type="submit">Login</button>
+      </form>
+      <p class="small">New? Switch to Register tab.</p>
+      <p id="loginMsg" class="small"></p>
+    </div>
+
+    <div id="registerPanel" class="panel hidden">
+      <h3>Register</h3>
+      <form id="registerForm">
+        <label>Full name</label><input id="regName" type="text" required />
+        <label>Email</label><input id="regEmail" type="email" required />
+        <label>Password</label>
+        <div class="password-row"><input id="regPassword" type="password" minlength="6" required /><button type="button" class="eye" id="regEye">👁</button></div>
+        <label>Profile image (optional)</label><input id="regPhoto" type="file" accept="image/*" />
+        <button class="btn" type="submit">Create account</button>
+      </form>
+      <p id="regMsg" class="small"></p>
+    </div>
+
+    <div id="forgotPanel" class="panel hidden">
+      <h3>Forgot password</h3>
+      <form id="forgotForm">
+        <label>Email</label><input id="forgotEmail" type="email" required />
+        <button class="btn" type="submit">Send reset email</button>
+      </form>
+      <p id="forgotMsg" class="small"></p>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+  <script type="module">
+    import { initAuthPage } from './app.js';
+    initAuthPage();
+  </script>
+</body>
+</html>
