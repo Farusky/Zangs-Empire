@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Register - Family Chat</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container auth-card">
+    <h2>Create account</h2>
+    <form id="registerForm">
+      <label>Full name</label>
+      <input id="name" type="text" required />
+      <label>Email</label>
+      <input id="email" type="email" required />
+      <label>Password</label>
+      <div class="password-row">
+        <input id="password" type="password" required minlength="6" />
+        <button type="button" id="togglePassword" class="eye">👁</button>
+      </div>
+      <br>
+      <button class="btn" type="submit">Register</button>
+    </form>
+    <p class="small">Already have an account? <a href="login.html">Login</a></p>
+    <p id="message" class="small"></p>
+  </div>
+
+  <script type="module" src="app.js"></script>
+  <script type="module">
+    import { initRegisterPage } from './app.js';
+    initRegisterPage();
+  </script>
+</body>
+</html>

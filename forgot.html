@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Forgot Password - Family Chat</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container auth-card">
+    <h2>Reset Password</h2>
+    <form id="forgotForm">
+      <label>Enter your account email</label>
+      <input id="email" type="email" required />
+      <button class="btn" type="submit">Send reset email</button>
+    </form>
+    <p id="message" class="small"></p>
+    <p class="small"><a href="login.html">Back to login</a></p>
+  </div>
+
+  <script type="module" src="app.js"></script>
+  <script type="module">
+    import { initForgotPage } from './app.js';
+    initForgotPage();
+  </script>
+</body>
+</html>

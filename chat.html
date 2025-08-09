@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Chat - Family Chat</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="chat-app">
+    <header class="chat-header">
+      <div class="left">
+        <div class="avatar">F</div>
+        <div>
+          <div id="userName">Family Chat</div>
+          <div class="small">Private group chat</div>
+        </div>
+      </div>
+      <div class="right">
+        <button id="logoutBtn" class="btn btn-small">Logout</button>
+      </div>
+    </header>
+
+    <main id="messages" class="messages"></main>
+
+    <form id="messageForm" class="message-form">
+      <input id="messageInput" placeholder="Type a message..." autocomplete="off" required />
+      <button class="btn" type="submit">Send</button>
+    </form>
+  </div>
+
+  <script type="module" src="app.js"></script>
+  <script type="module">
+    import { initChatPage } from './app.js';
+    initChatPage();
+  </script>
+</body>
+</html>
