@@ -184,9 +184,3 @@ document.getElementById('messageInput').addEventListener('input', async ()=>{
 
 // logout
 document.getElementById('logout').addEventListener('click', async ()=>{ await signOut(auth); location.href='login.html'; });
-
-// ...existing code...
-
-document.getElementById('meAvatar').addEventListener('click', function() {
-  window.location.href = 'profile.html';
-});
