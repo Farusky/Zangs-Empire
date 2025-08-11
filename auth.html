@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Zangs Empire - Auth</title>
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="container auth">
+    <h2>Zangs Empire</h2>
+    <div class="tabs">
+      <button id="tabLogin" class="tab active">Login</button>
+      <button id="tabSignup" class="tab">Sign up</button>
+      <button id="tabForgot" class="tab">Forgot</button>
+    </div>
+
+    <div id="loginPanel" class="panel">
+      <form id="loginForm">
+        <label>Email</label><input id="loginEmail" type="email" required />
+        <label>Password</label><div class="password-row"><input id="loginPassword" type="password" required /><button type="button" class="eye" id="loginEye">👁</button></div>
+        <br>
+        <button class="btn" type="submit">Login</button>
+      </form>
+      <p id="loginMsg" class="small muted"></p>
+    </div>
+
+    <div id="signupPanel" class="panel hidden">
+      <form id="signupForm">
+        <label>Full name</label><input id="signupName" type="text" required />
+        <label>Email</label><input id="signupEmail" type="email" required />
+        <label>Password</label><div class="password-row"><input id="signupPassword" type="password" minlength="6" required /><button type="button" class="eye" id="signupEye">👁</button></div>
+        <label>Profile picture (optional)</label><input id="signupPhoto" type="file" accept="image/*" />
+        <br>
+        <button class="btn" type="submit">Create account</button>
+      </form>
+      <p id="signupMsg" class="small muted"></p>
+    </div>
+
+    <div id="forgotPanel" class="panel hidden">
+      <form id="forgotForm">
+        <label>Email</label><input id="forgotEmail" type="email" required />
+        <button class="btn" type="submit">Send reset email</button>
+      </form>
+      <p id="forgotMsg" class="small muted"></p>
+    </div>
+  </div>
+
+<script type="module" src="js/auth.js"></script>
+</body>
+</html>

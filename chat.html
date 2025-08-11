@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Zangs Empire - Chat</title>
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <header class="sidebar-header">
+        <div class="me"><div id="meAvatar" class="avatar">U</div><div><div id="meName">User</div><div id="meEmail" class="small muted"></div></div></div>
+        <div><button id="logout" class="btn-small">Logout</button></div>
+      </header>
+      <div class="search"><input id="searchChat" placeholder="Search chats or contacts..." /></div>
+      <div class="sidebar-actions"><button id="newChatBtn" class="btn">New Chat</button><button id="newGroupBtn" class="btn btn-outline">New Group</button></div>
+      <div id="chatsList" class="chat-list"></div>
+    </aside>
+
+    <main class="chat-pane">
+      <header class="chat-header"><div class="chat-title"><div id="chatAvatar" class="avatar">C</div><div><div id="chatTitle">Select a chat</div><div id="chatSub" class="small muted"></div></div></div><div><input id="attachFile" type="file" style="display:none" /><button id="attachBtn" class="btn-small">Attach</button></div></header>
+      <div id="messages" class="messages"></div>
+      <form id="sendForm" class="message-form"><input id="messageInput" placeholder="Type a message..." autocomplete="off" /><input id="fileInput" type="file" style="display:none" /><button id="fileBtn" type="button" class="btn">📎</button><button class="btn" type="submit">Send</button></form>
+    </main>
+  </div>
+
+  <!-- dialogs -->
+  <dialog id="dialogNewChat"><form id="formNewChat" method="dialog"><h3>Start Private Chat</h3><label>Friend's email</label><input id="friendEmail" type="email" required /><button class="btn" type="submit">Create</button><button class="btn btn-outline" id="closeNewChat" type="button">Close</button></form></dialog>
+  <dialog id="dialogNewGroup"><form id="formNewGroup" method="dialog"><h3>Create Group</h3><label>Group name</label><input id="groupName" type="text" required /><label>Members emails (comma sep)</label><input id="groupMembers" type="text" placeholder="a@example.com, b@example.com" /><button class="btn" type="submit">Create Group</button><button class="btn btn-outline" id="closeNewGroup" type="button">Close</button></form></dialog>
+
+<script type="module" src="js/chat.js"></script>
+</body>
+</html>
