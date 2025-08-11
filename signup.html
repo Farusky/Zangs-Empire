@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Sign up - Zangs Empire</title><link rel="stylesheet" href="css/styles.css" /></head>
+<body>
+  <div class="container auth">
+    <h2>Create an account</h2>
+    <form id="signupForm">
+      <label>Full name</label><input id="signupName" type="text" required />
+      <label>Email</label><input id="signupEmail" type="email" required />
+      <label>Password</label><div class="password-row"><input id="signupPassword" type="password" minlength="6" required /><button type="button" class="eye" id="signupEye">👁</button></div>
+      <label>Profile picture (optional)</label><input id="signupPhoto" type="file" accept="image/*" />
+      <button class="btn" type="submit">Sign up</button>
+    </form>
+    <p class="small">Already have an account? <a href="login.html">Login</a></p>
+    <p id="signupMsg" class="small muted"></p>
+  </div>
+<script type="module" src="js/auth.js"></script>
+</body>
+</html>

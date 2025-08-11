@@ -1,0 +1,61 @@
+/* styles.css - Zangs Empire WhatsApp-like theme */
+:root{--bg:#071f12;--panel:#062013;--accent:#0b6a2a;--me:#14a057;--text:#e9f5ee;--muted:#9fb9a9;}
+*{box-sizing:border-box;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;color:var(--text);}
+body{margin:0;background:linear-gradient(180deg,var(--bg), #041009);min-height:100vh;}
+.topbar{padding:12px 20px;background:linear-gradient(90deg,var(--accent),#0b8b3a);}
+.topbar h1{margin:0;font-size:20px;}
+.center{text-align:center;padding:40px;}
+.muted{color:var(--muted);}
+.small{font-size:13px;color:var(--muted);}
+.btn{background:var(--accent);color:white;padding:10px 14px;border-radius:10px;border:none;cursor:pointer;text-decoration:none;}
+.btn-outline{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:10px 12px;border-radius:10px;color:var(--text);}
+.btn-small{padding:6px 8px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--text);}
+
+/* auth */
+.container{max-width:980px;margin:40px auto;padding:20px;}
+.auth{max-width:420px;margin:30px auto;padding:18px;background:rgba(255,255,255,0.02);border-radius:12px;}
+.tabs{display:flex;gap:6px;margin-bottom:12px;}
+.tab{flex:1;padding:8px;border-radius:8px;border:none;background:transparent;color:var(--muted);cursor:pointer;}
+.tab.active{background:rgba(11,106,42,0.12);color:var(--text);}
+.panel{padding:6px;}
+.hidden{display:none;}
+input[type="text"],input[type="email"],input[type="password"],input[type="file"]{width:100%;padding:10px;margin-top:6px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:var(--text);}
+.password-row{display:flex;gap:8px;align-items:center;}
+.password-row .eye{border:none;background:transparent;color:var(--muted);cursor:pointer;padding:6px;border-radius:6px;}
+
+/* app */
+.app{display:flex;height:100vh;}
+.sidebar{width:320px;background:var(--panel);display:flex;flex-direction:column;padding:12px;gap:10px;border-right:1px solid rgba(255,255,255,0.03);min-width:260px;}
+.sidebar-header{display:flex;justify-content:space-between;align-items:center;}
+.me{display:flex;gap:10px;align-items:center;}
+.avatar{width:46px;height:46px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--text);overflow:hidden;background-size:cover;background-position:center;}
+.search input{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:var(--text);}
+.sidebar-actions{display:flex;gap:8px;}
+
+/* chat list */
+.chat-list{overflow:auto;flex:1;display:flex;flex-direction:column;gap:8px;padding-right:6px;}
+.chat-item{display:flex;gap:10px;align-items:center;padding:8px;border-radius:8px;cursor:pointer;}
+.chat-item:hover{background:rgba(255,255,255,0.02);}
+.chat-item.active{background:linear-gradient(90deg, rgba(11,106,42,0.12), transparent);}
+.chat-item .meta{flex:1;}
+.chat-item .meta .name{font-weight:600;}
+.chat-item .meta .last{font-size:13px;color:var(--muted);}
+
+/* chat pane */
+.chat-pane{flex:1;display:flex;flex-direction:column;align-items:stretch;}
+.chat-header{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.03);}
+.chat-title{display:flex;gap:10px;align-items:center;}
+.messages{flex:1;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:12px;background:linear-gradient(180deg, rgba(0,0,0,0.03), transparent);}
+.message{max-width:72%;padding:10px 12px;border-radius:12px;line-height:1.2;}
+.me{align-self:flex-end;background:linear-gradient(180deg,var(--me),#0c8a3a);border-bottom-right-radius:4px;color:#fff;}
+.other{align-self:flex-start;background:rgba(255,255,255,0.03);color:var(--text);}
+.message .meta{font-size:12px;color:var(--muted);margin-top:6px;}
+.message img{max-width:260px;border-radius:8px;display:block;margin-top:6px;}
+.message .seen{font-size:11px;color:var(--muted);margin-top:6px;}
+
+/* message form */
+.message-form{display:flex;gap:8px;padding:10px;border-top:1px solid rgba(255,255,255,0.03);align-items:center;}
+.message-form input[type="text"]{flex:1;padding:10px;border-radius:20px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:var(--text);}
+.card{background:rgba(255,255,255,0.02);padding:16px;border-radius:12px;}
+dialog{border:none;border-radius:10px;padding:12px;background:var(--panel);} 
+@media(max-width:800px){.sidebar{display:none}.app{flex-direction:column}.chat-pane{height:100vh}}

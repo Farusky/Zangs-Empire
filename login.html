@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Login - Zangs Empire</title><link rel="stylesheet" href="css/styles.css" /></head>
+<body>
+  <div class="container auth">
+    <h2>Zangs Empire</h2>
+    <form id="loginForm">
+      <label>Email</label><input id="loginEmail" type="email" required />
+      <label>Password</label><br>
+      <div class="password-row"><input id="loginPassword" type="password" required /><button type="button" class="eye" id="loginEye">👁</button></div>
+      <button class="btn" type="submit">Login</button>
+    </form>
+    <p class="small"><a href="forgot.html">Forgot password?</a> • <a href="signup.html">Create account</a></p>
+    <p id="loginMsg" class="small muted"></p>
+  </div>
+<script type="module" src="js/auth.js"></script>
+</body>
+</html>
